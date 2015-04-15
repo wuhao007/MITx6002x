@@ -129,7 +129,7 @@ class RectangularRoom(object):
 
         returns: a Position object.
         """
-        return Position(random.randint(0, self.width - 1), random.randint(0, self.height - 1))
+        return Position(random.randrange(0, self.width), random.randrange(0, self.height))
 
     def isPositionInRoom(self, pos):
         """
@@ -138,7 +138,7 @@ class RectangularRoom(object):
         pos: a Position object.
         returns: True if pos is in the room, False otherwise.
         """
-        return 0 <= pos.getX() < self.width and 0 <= pos.getY() < self.height
+        return (0 <= pos.getX() < self.width) and (0 <= pos.getY() < self.height)
 
 
 class Robot(object):
@@ -163,7 +163,7 @@ class Robot(object):
         self.pos = room.getRandomPosition()
         room.cleanTileAtPosition(self.pos)
         self.room = room
-        self.direction = random.random() * 360.0
+        self.direction = random.random() * 360
         self.speed = speed
 
     def getRobotPosition(self):
@@ -227,7 +227,7 @@ class StandardRobot(Robot):
         """
         pos = self.pos.getNewPosition(self.direction, self.speed)
         while not self.room.isPositionInRoom(pos):
-            self.setRobotDirection(random.random() * 360.0)
+            self.setRobotDirection(random.random() * 360)
             pos = self.pos.getNewPosition(self.direction, self.speed)
         self.setRobotPosition(pos)
         self.room.cleanTileAtPosition(pos) 
@@ -255,21 +255,22 @@ def runSimulation(num_robots, speed, width, height, min_coverage, num_trials,
     robot_type: class of robot to be instantiated (e.g. StandardRobot or
                 RandomWalkRobot)
     """
-    steps = []
+    time = 0
     for trial in range(num_trials):
         room = RectangularRoom(width, height)
-        robots = [robot_type(room, speed)] * num_robots
-        step = 0
+        robots = [robot_type(room, speed) for _ in range(num_robots)]
+        #anim = ps2_visualize.RobotVisualization(num_robots, width, height)
         while room.getNumCleanedTiles() < room.getNumTiles() * min_coverage: 
+            #anim.update(room, robots)
             for robot in robots:
                 robot.updatePositionAndClean()
-            step += 1
-        steps += [step]
-    return sum(steps) / num_trials
+            time += 1
+        #anim.done()
+    return time / num_trials
           
     
 # Uncomment this line to see how much your simulation takes on average
-print  runSimulation(1, 1.0, 10, 10, 0.75, 30, StandardRobot)
+#print  runSimulation(1, 1.0, 5, 5, 1.0, 30, StandardRobot)
 
 
 # === Problem 4
@@ -285,7 +286,13 @@ class RandomWalkRobot(Robot):
         Move the robot to a new position and mark the tile it is on as having
         been cleaned.
         """
-        raise NotImplementedError
+        self.setRobotDirection(random.random() * 360)
+        pos = self.pos.getNewPosition(self.direction, self.speed)
+        while not self.room.isPositionInRoom(pos):
+            self.setRobotDirection(random.random() * 360)
+            pos = self.pos.getNewPosition(self.direction, self.speed)
+        self.setRobotPosition(pos)
+        self.room.cleanTileAtPosition(pos) 
 
 
 def showPlot1(title, x_label, y_label):
@@ -337,10 +344,11 @@ def showPlot2(title, x_label, y_label):
 #
 #       (... your call here ...)
 #
-
+#showPlot1("Time It Takes 1 - 10 Robots To Clean 80% Of A Room", "Number of Robots", "Time-steps")
 #
 # 2) Write a function call to showPlot2 that generates an appropriately-labeled
 #     plot.
 #
 #       (... your call here ...)
 #
+showPlot2("Time It Takes Two Robots To Clean 80% Of Variously Shaped Rooms", "Aspect Ratio", "Time-steps")
